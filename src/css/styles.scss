@@ -1,0 +1,85 @@
+body {
+    background-color: black;
+    color: white;
+    font-family: sans-serif;
+}
+
+#feed_container,
+#feed_container_spiegel,
+#feed_container_tagesschau {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    padding: 20px;
+    background-color: #222;
+    border-radius: 10px;
+
+    .grid-item {
+        background-color: #333;
+        border: 1px solid #444;
+        border-radius: 10px;
+        overflow: hidden;
+        text-align: center;
+        padding: 15px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+        &:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            border-bottom: 1px solid #444;
+            margin-bottom: 10px;
+        }
+
+        h3 {
+            color: #fff;
+            font-size: 1.2rem;
+            margin: 10px 0;
+        }
+
+        a {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 10px 15px;
+            background-color: #555;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+
+            &:hover {
+                background-color: #777;
+            }
+        }
+    }
+}
+
+#btn_refresh {
+    display: inline-block;
+    margin: 20px auto;
+    padding: 10px 20px;
+    background-color: #444;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    text-align: center;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+
+    &:hover {
+        background-color: #666;
+        transform: scale(1.05);
+    }
+
+    &:active {
+        background-color: #555;
+        transform: scale(0.95);
+    }
+}
