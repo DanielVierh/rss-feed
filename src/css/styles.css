@@ -86,4 +86,18 @@ body {
 #btn_refresh:active {
   background-color: #555;
   transform: scale(0.95);
+}
+
+h2 {
+  background-color: rgb(4, 19, 29);
+  color: white;
+  padding: 150px 30px;
+  font-size: 3rem;
+  text-transform: uppercase;
+}
+h2.spiegel {
+  background-color: tomato;
+}
+h2.tagesschau {
+  background-color: rgb(15, 92, 143);
 }/*# sourceMappingURL=styles.css.map */
