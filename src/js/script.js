@@ -690,11 +690,14 @@ function createItemCard(summary, { showActions }) {
   descrTag.className = "card-desc";
   descrTag.textContent = summary.description || DEFAULT_PREVIEW_TEXT;
 
-  const itemLink = document.createElement("a");
-  itemLink.href = summary.link;
-  itemLink.textContent = "Read more";
-  itemLink.target = "_blank";
-  itemLink.rel = "noopener noreferrer";
+  const normalizedLink = normalizeArticleUrl(summary.link);
+  const itemLink = normalizedLink ? document.createElement("a") : null;
+  if (itemLink) {
+    itemLink.href = normalizedLink;
+    itemLink.textContent = "Mehr lesen ➡️";
+    itemLink.target = "_blank";
+    itemLink.rel = "noopener noreferrer";
+  }
 
   const content = document.createElement("div");
   content.className = "card-content";
@@ -714,10 +717,14 @@ function createItemCard(summary, { showActions }) {
     favBtn.className =
       "btn-action" + (isFavorite(summary.id) ? " is-active" : "");
     favBtn.textContent = isFavorite(summary.id) ? "⭐ Favorit" : "☆ Favorit";
-    favBtn.addEventListener("click", () => {
-      toggleFavorite(summary);
-      renderAllFromCache();
-      renderLists();
+    favBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      preserveViewportPosition(itemDiv, () => {
+        toggleFavorite(summary);
+        updateFavoriteButtonUi(favBtn, summary.id);
+        renderLists();
+      });
     });
 
     const laterBtn = document.createElement("button");
@@ -727,10 +734,14 @@ function createItemCard(summary, { showActions }) {
     laterBtn.textContent = isReadLater(summary.id)
       ? "📌 Gespeichert"
       : "📌 Später lesen";
-    laterBtn.addEventListener("click", () => {
-      toggleReadLater(summary);
-      renderAllFromCache();
-      renderLists();
+    laterBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      preserveViewportPosition(itemDiv, () => {
+        toggleReadLater(summary);
+        updateReadLaterButtonUi(laterBtn, summary.id);
+        renderLists();
+      });
     });
 
     actions.appendChild(favBtn);
@@ -738,12 +749,57 @@ function createItemCard(summary, { showActions }) {
     footer.appendChild(actions);
   }
 
-  footer.appendChild(itemLink);
+  if (itemLink) footer.appendChild(itemLink);
 
   itemDiv.appendChild(content);
   itemDiv.appendChild(footer);
 
   return itemDiv;
+}
+
+function preserveViewportPosition(anchorEl, updateFn) {
+  if (!anchorEl || typeof updateFn !== "function") {
+    if (typeof updateFn === "function") updateFn();
+    return;
+  }
+
+  const before = anchorEl.getBoundingClientRect().top;
+  updateFn();
+
+  // If DOM above the current viewport changes height, the browser keeps scrollTop
+  // which can visually "jump" the content. Compensate by scrolling the delta.
+  const after = anchorEl.getBoundingClientRect().top;
+  const delta = after - before;
+  if (delta) window.scrollBy(0, delta);
+}
+
+function normalizeArticleUrl(url) {
+  if (!url) return "";
+  let s = String(url).trim();
+  if (!s || s === "#") return "";
+  if (s.startsWith("//")) s = `https:${s}`;
+
+  // Only allow http(s) links here to avoid scroll-to-top / hash navigation issues.
+  if (!/^https?:\/\//i.test(s)) return "";
+  try {
+    return new URL(s).toString();
+  } catch {
+    return "";
+  }
+}
+
+function updateFavoriteButtonUi(buttonEl, id) {
+  if (!buttonEl) return;
+  const active = isFavorite(id);
+  buttonEl.classList.toggle("is-active", active);
+  buttonEl.textContent = active ? "⭐ Favorit" : "☆ Favorit";
+}
+
+function updateReadLaterButtonUi(buttonEl, id) {
+  if (!buttonEl) return;
+  const active = isReadLater(id);
+  buttonEl.classList.toggle("is-active", active);
+  buttonEl.textContent = active ? "📌 Gespeichert" : "📌 Später lesen";
 }
 
 function renderLists() {
@@ -799,7 +855,7 @@ function normalizeItem(feedKey, item, cfg) {
     id,
     feedKey,
     title: item.title || "",
-    link: item.link || "#",
+    link: item.link || "",
     pubDate: item.pubDate || "",
     description: previewText,
     image: img || placeholderImage,

@@ -33,10 +33,14 @@ body {
   background: #222;
   color: #fff;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
-.controls button:hover {
-  background: #2b2b2b;
+@media (hover: hover) and (pointer: fine) {
+  .controls button:hover {
+    background: #2b2b2b;
+  }
 }
 
 dialog#feeds_modal {
@@ -164,6 +168,8 @@ dialog#feeds_modal::backdrop {
   border-radius: 8px;
   border: 1px solid #333;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 .btn-primary {
@@ -296,15 +302,14 @@ details.collapsible[open] summary::after {
     transform 0.3s ease,
     box-shadow 0.3s ease;
 }
-#favorites_container .grid-item:hover,
-#readlater_container .grid-item:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-}
 
-.feed-grid .grid-item:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+@media (hover: hover) and (pointer: fine) {
+  #favorites_container .grid-item:hover,
+  #readlater_container .grid-item:hover,
+  .feed-grid .grid-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+  }
 }
 #favorites_container .grid-item img,
 #readlater_container .grid-item img,
@@ -395,13 +400,18 @@ details.collapsible[open] summary::after {
   background: #222;
   color: #fff;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
   transition:
     transform 0.15s ease,
     background-color 0.2s ease;
 }
-.btn-action:hover {
-  background: #2b2b2b;
-  transform: translateY(-1px);
+
+@media (hover: hover) and (pointer: fine) {
+  .btn-action:hover {
+    background: #2b2b2b;
+    transform: translateY(-1px);
+  }
 }
 .btn-action.is-active {
   border-color: #ffd24d;
@@ -421,13 +431,18 @@ details.collapsible[open] summary::after {
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
   transition:
     background-color 0.3s ease,
     transform 0.2s ease;
 }
-#btn_refresh:hover {
-  background-color: #666;
-  transform: scale(1.05);
+
+@media (hover: hover) and (pointer: fine) {
+  #btn_refresh:hover {
+    background-color: #666;
+    transform: scale(1.05);
+  }
 }
 #btn_refresh:active {
   background-color: #555;
