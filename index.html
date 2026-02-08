@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="de">
   <head>
     <meta charset="UTF-8" />
@@ -9,7 +9,32 @@
   <body>
     <h1>News-Feed</h1>
 
-    <div id="btn_refresh">Aktualieren</div>
+    <div class="controls" aria-label="Feed Einstellungen">
+      <label for="sort_order">Sortierung</label>
+      <select id="sort_order">
+        <option value="newest" selected>Neueste zuerst</option>
+        <option value="oldest">Älteste zuerst</option>
+      </select>
+
+      <button id="btn_refresh" type="button">Aktualisieren</button>
+    </div>
+
+    <hr />
+    <details class="collapsible" id="favorites_panel">
+      <summary>
+        <span>Favoriten</span>
+        <span class="panel-count" id="favorites_count">(0)</span>
+      </summary>
+      <div class="panel-body" id="favorites_container"></div>
+    </details>
+
+    <details class="collapsible" id="readlater_panel">
+      <summary>
+        <span>Später lesen</span>
+        <span class="panel-count" id="readlater_count">(0)</span>
+      </summary>
+      <div class="panel-body" id="readlater_container"></div>
+    </details>
 
     <hr />
     <h2>Heise</h2>

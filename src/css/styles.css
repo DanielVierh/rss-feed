@@ -4,36 +4,111 @@ body {
   font-family: sans-serif;
 }
 
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 0 20px 20px 20px;
+  align-items: center;
+}
+.controls select {
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid #444;
+  background: #222;
+  color: #fff;
+  outline: none;
+}
+.controls label {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  user-select: none;
+}
+
+details.collapsible {
+  margin: 0 20px 20px 20px;
+  border: 1px solid #333;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #111;
+}
+
+details.collapsible summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 14px 16px;
+  background: #141414;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+details.collapsible summary::-webkit-details-marker {
+  display: none;
+}
+
+details.collapsible summary::after {
+  content: "▸";
+  opacity: 0.9;
+}
+
+details.collapsible[open] summary::after {
+  content: "▾";
+}
+
+.panel-count {
+  opacity: 0.75;
+  font-weight: 600;
+}
+
+.panel-body {
+  padding: 16px;
+}
+
 #feed_container,
 #feed_container_spiegel,
-#feed_container_tagesschau {
+#feed_container_tagesschau,
+#favorites_container,
+#readlater_container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 20px;
-  padding: 20px;
+  padding: 0;
   background-color: #222;
   border-radius: 10px;
 }
 #feed_container .grid-item,
 #feed_container_spiegel .grid-item,
-#feed_container_tagesschau .grid-item {
+#feed_container_tagesschau .grid-item,
+#favorites_container .grid-item,
+#readlater_container .grid-item {
   background-color: #333;
   border: 1px solid #444;
   border-radius: 10px;
   overflow: hidden;
   text-align: center;
   padding: 15px;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
 }
 #feed_container .grid-item:hover,
 #feed_container_spiegel .grid-item:hover,
-#feed_container_tagesschau .grid-item:hover {
+#feed_container_tagesschau .grid-item:hover,
+#favorites_container .grid-item:hover,
+#readlater_container .grid-item:hover {
   transform: translateY(-5px);
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
 }
 #feed_container .grid-item img,
 #feed_container_spiegel .grid-item img,
-#feed_container_tagesschau .grid-item img {
+#feed_container_tagesschau .grid-item img,
+#favorites_container .grid-item img,
+#readlater_container .grid-item img {
   max-width: 100%;
   height: auto;
   border-bottom: 1px solid #444;
@@ -41,14 +116,18 @@ body {
 }
 #feed_container .grid-item h3,
 #feed_container_spiegel .grid-item h3,
-#feed_container_tagesschau .grid-item h3 {
+#feed_container_tagesschau .grid-item h3,
+#favorites_container .grid-item h3,
+#readlater_container .grid-item h3 {
   color: #fff;
   font-size: 1.2rem;
   margin: 10px 0;
 }
 #feed_container .grid-item a,
 #feed_container_spiegel .grid-item a,
-#feed_container_tagesschau .grid-item a {
+#feed_container_tagesschau .grid-item a,
+#favorites_container .grid-item a,
+#readlater_container .grid-item a {
   display: inline-block;
   margin-top: 10px;
   padding: 10px 15px;
@@ -60,13 +139,43 @@ body {
 }
 #feed_container .grid-item a:hover,
 #feed_container_spiegel .grid-item a:hover,
-#feed_container_tagesschau .grid-item a:hover {
+#feed_container_tagesschau .grid-item a:hover,
+#favorites_container .grid-item a:hover,
+#readlater_container .grid-item a:hover {
   background-color: #777;
+}
+
+.card-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.btn-action {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #444;
+  background: #222;
+  color: #fff;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    background-color 0.2s ease;
+}
+.btn-action:hover {
+  background: #2b2b2b;
+  transform: translateY(-1px);
+}
+.btn-action.is-active {
+  border-color: #ffd24d;
+  background: #3a2f12;
 }
 
 #btn_refresh {
   display: inline-block;
-  margin: 20px auto;
+  margin: 0;
   padding: 10px 20px;
   background-color: #444;
   color: #fff;
@@ -77,7 +186,9 @@ body {
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
+  transition:
+    background-color 0.3s ease,
+    transform 0.2s ease;
 }
 #btn_refresh:hover {
   background-color: #666;
@@ -100,4 +211,4 @@ h2.spiegel {
 }
 h2.tagesschau {
   background-color: rgb(15, 92, 143);
-}/*# sourceMappingURL=styles.css.map */
+} /*# sourceMappingURL=styles.css.map */
