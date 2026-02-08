@@ -294,7 +294,8 @@ function init() {
 
 function setLoadingAll() {
   Object.values(state.activeFeedConfigs).forEach((cfg) => {
-    if (cfg.container) cfg.container.innerHTML = `<h1>Lade Daten....</h1>`;
+    if (cfg.container)
+      cfg.container.innerHTML = `<p class="feed-loading">Lade Daten…</p>`;
   });
 }
 
@@ -348,23 +349,47 @@ function renderActiveFeedsSkeleton() {
   ui.feedsRoot.innerHTML = "";
 
   for (const [key, cfg] of Object.entries(state.activeFeedConfigs)) {
-    const hrTop = document.createElement("hr");
-    const heading = document.createElement("h2");
-    heading.className = `feed-heading ${cfg.headerClass || ""}`.trim();
-    heading.textContent = cfg.label;
-    const hrBottom = document.createElement("hr");
+    const panel = document.createElement("details");
+    panel.className = "collapsible";
+    panel.dataset.feedKey = key;
+
+    const summary = document.createElement("summary");
+    const left = document.createElement("span");
+    left.className = "feed-summary-left";
+
+    const label = document.createElement("span");
+    label.textContent = cfg.label;
+
+    const count = document.createElement("span");
+    count.className = "panel-count";
+    count.id = `feed_count_${key}`;
+    count.textContent = "(0)";
+
+    left.appendChild(label);
+    left.appendChild(count);
+    summary.appendChild(left);
+
+    const body = document.createElement("div");
+    body.className = "panel-body";
 
     const grid = document.createElement("div");
     grid.className = "feed-grid";
     grid.dataset.feedKey = key;
 
-    ui.feedsRoot.appendChild(hrTop);
-    ui.feedsRoot.appendChild(heading);
-    ui.feedsRoot.appendChild(hrBottom);
-    ui.feedsRoot.appendChild(grid);
+    body.appendChild(grid);
+    panel.appendChild(summary);
+    panel.appendChild(body);
+
+    ui.feedsRoot.appendChild(panel);
 
     cfg.container = grid;
   }
+}
+
+function setFeedCount(feedKey, count) {
+  const el = document.getElementById(`feed_count_${feedKey}`);
+  if (!el) return;
+  el.textContent = `(${count})`;
 }
 
 function renderFeedSelectionList() {
@@ -595,6 +620,13 @@ function renderFeed(feedKey, cfg, items) {
   filtered.sort((a, b) => sortByDate(a.pubDate, b.pubDate, state.sortOrder));
 
   cfg.container.innerHTML = ``;
+
+  setFeedCount(feedKey, filtered.length);
+
+  if (filtered.length === 0) {
+    cfg.container.innerHTML = `<p class="feed-empty">Keine Beiträge gefunden.</p>`;
+    return;
+  }
 
   filtered.forEach((item) => {
     const summary = normalizeItem(feedKey, item, cfg);

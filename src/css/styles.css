@@ -220,6 +220,20 @@ details.collapsible[open] summary::after {
   padding: 16px;
 }
 
+.feed-summary-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.feed-loading,
+.feed-empty {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 12px;
+  opacity: 0.85;
+}
+
 .feed-grid,
 #favorites_container,
 #readlater_container {
