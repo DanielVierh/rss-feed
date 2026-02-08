@@ -16,8 +16,48 @@
         <option value="oldest">Älteste zuerst</option>
       </select>
 
+      <button id="btn_manage_feeds" type="button">Feeds auswählen</button>
       <button id="btn_refresh" type="button">Aktualisieren</button>
     </div>
+
+    <dialog id="feeds_modal" aria-label="RSS Feeds auswählen">
+      <form method="dialog" class="modal">
+        <header class="modal-header">
+          <h3>RSS Feeds auswählen</h3>
+          <button
+            id="feeds_close"
+            class="btn-icon"
+            value="cancel"
+            aria-label="Schließen"
+            type="submit"
+          >
+            ✕
+          </button>
+        </header>
+
+        <div class="modal-body">
+          <p class="modal-hint">
+            Wähle die Feeds aus, die angezeigt werden sollen. Deine Auswahl wird
+            gespeichert.
+          </p>
+          <div id="feeds_list" class="feeds-list"></div>
+        </div>
+
+        <footer class="modal-footer">
+          <button
+            id="feeds_cancel"
+            class="btn-secondary"
+            value="cancel"
+            type="submit"
+          >
+            Abbrechen
+          </button>
+          <button id="feeds_save" class="btn-primary" type="button">
+            Speichern
+          </button>
+        </footer>
+      </form>
+    </dialog>
 
     <hr />
     <details class="collapsible" id="favorites_panel">
@@ -37,18 +77,7 @@
     </details>
 
     <hr />
-    <h2>Heise</h2>
-    <hr />
-
-    <div id="feed_container"></div>
-    <hr />
-    <h2 class="tagesschau">Tagesschau</h2>
-    <hr />
-    <div id="feed_container_tagesschau"></div>
-    <hr />
-    <h2 class="spiegel">Spiegel News</h2>
-    <hr />
-    <div id="feed_container_spiegel"></div>
+    <div id="feeds_root"></div>
 
     <script src="src/js/script.js"></script>
   </body>

@@ -1,50 +1,61 @@
-const feed_configs = {
+const FEED_CATALOG = {
   heise: {
-    url: "https://api.rss2json.com/v1/api.json?rss_url=https://heise.de/rss/heise-atom.xml",
-    container: document.getElementById("feed_container"),
-    getImage: (item) => {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(item.content, "text/html");
-      const imgTag = doc.querySelector("img");
-      return imgTag ? imgTag.src : "https://via.placeholder.com/150";
-    },
-  },
-  spiegel: {
-    url: "https://api.rss2json.com/v1/api.json?rss_url=https://www.spiegel.de/schlagzeilen/tops/index.rss",
-    container: document.getElementById("feed_container_spiegel"),
-    getImage: (item) =>
-      item.enclosure && item.enclosure.link
-        ? item.enclosure.link
-        : "https://via.placeholder.com/150",
+    label: "Heise",
+    rssUrl: "https://heise.de/rss/heise-atom.xml",
+    headerClass: "",
+    imageMode: "content_img",
   },
   tagesschau: {
-    url: "https://api.rss2json.com/v1/api.json?rss_url=https://www.tagesschau.de/xml/rss2",
-    container: document.getElementById("feed_container_tagesschau"),
-    getImage: (item) => {
-      if (item.content) {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(item.content, "text/html");
-        const imgTag = doc.querySelector("img");
-        if (imgTag && imgTag.src) return imgTag.src;
-      }
-      return "https://via.placeholder.com/150";
-    },
+    label: "Tagesschau",
+    rssUrl: "https://www.tagesschau.de/xml/rss2",
+    headerClass: "tagesschau",
+    imageMode: "content_img",
+  },
+  spiegel: {
+    label: "Spiegel News",
+    rssUrl: "https://www.spiegel.de/schlagzeilen/tops/index.rss",
+    headerClass: "spiegel",
+    imageMode: "enclosure",
+  },
+  zeit: {
+    label: "DIE ZEIT",
+    rssUrl: "https://newsfeed.zeit.de/index",
+    headerClass: "",
+    imageMode: "content_img",
+  },
+  faz: {
+    label: "FAZ",
+    rssUrl: "https://www.faz.net/rss/aktuell/",
+    headerClass: "",
+    imageMode: "content_img",
+  },
+  sueddeutsche: {
+    label: "Süddeutsche Zeitung",
+    rssUrl: "https://rss.sueddeutsche.de/rss/Topthemen",
+    headerClass: "",
+    imageMode: "content_img",
   },
 };
 
 const ui = {
   refreshBtn: document.getElementById("btn_refresh"),
+  manageFeedsBtn: document.getElementById("btn_manage_feeds"),
   sortOrder: document.getElementById("sort_order"),
   favoritesContainer: document.getElementById("favorites_container"),
   readLaterContainer: document.getElementById("readlater_container"),
   favoritesCount: document.getElementById("favorites_count"),
   readLaterCount: document.getElementById("readlater_count"),
+  feedsRoot: document.getElementById("feeds_root"),
+  feedsModal: document.getElementById("feeds_modal"),
+  feedsList: document.getElementById("feeds_list"),
+  feedsSave: document.getElementById("feeds_save"),
 };
 
 const STORAGE_KEYS = {
   favorites: "rss-feed:favorites:v1",
   readLater: "rss-feed:readlater:v1",
   prefs: "rss-feed:prefs:v1",
+  selectedFeeds: "rss-feed:selected-feeds:v1",
 };
 
 const state = {
@@ -52,12 +63,17 @@ const state = {
   itemsByFeed: new Map(),
   favorites: {},
   readLater: {},
+  selectedFeedKeys: [],
+  activeFeedConfigs: {},
 };
 
 window.onload = init;
 
 function init() {
   loadStateFromStorage();
+
+  buildActiveFeedConfigs();
+  renderActiveFeedsSkeleton();
 
   if (ui.sortOrder) {
     ui.sortOrder.value = state.sortOrder;
@@ -66,6 +82,41 @@ function init() {
       savePrefs();
       renderAllFromCache();
       renderLists();
+    });
+  }
+
+  if (ui.manageFeedsBtn && ui.feedsModal) {
+    ui.manageFeedsBtn.addEventListener("click", () => {
+      renderFeedSelectionList();
+      ui.feedsModal.showModal();
+    });
+  }
+
+  if (ui.feedsModal) {
+    ui.feedsModal.addEventListener("click", (e) => {
+      if (e.target === ui.feedsModal) ui.feedsModal.close();
+    });
+  }
+
+  if (ui.feedsSave) {
+    ui.feedsSave.addEventListener("click", () => {
+      const next = getSelectedFeedKeysFromModal();
+      state.selectedFeedKeys = next.length
+        ? next
+        : getDefaultSelectedFeedKeys();
+      saveSelectedFeeds();
+
+      // Reset feed cache for non-selected feeds
+      const active = new Set(state.selectedFeedKeys);
+      for (const key of Array.from(state.itemsByFeed.keys())) {
+        if (!active.has(key)) state.itemsByFeed.delete(key);
+      }
+
+      buildActiveFeedConfigs();
+      renderActiveFeedsSkeleton();
+      renderLists();
+      fetchAllFeeds();
+      ui.feedsModal?.close();
     });
   }
 
@@ -79,14 +130,16 @@ function init() {
 }
 
 function setLoadingAll() {
-  Object.values(feed_configs).forEach((cfg) => {
+  Object.values(state.activeFeedConfigs).forEach((cfg) => {
     if (cfg.container) cfg.container.innerHTML = `<h1>Lade Daten....</h1>`;
   });
 }
 
 function fetchAllFeeds() {
   setLoadingAll();
-  Object.entries(feed_configs).forEach(([key, cfg]) => fetchFeed(key, cfg));
+  Object.entries(state.activeFeedConfigs).forEach(([key, cfg]) =>
+    fetchFeed(key, cfg),
+  );
 }
 
 async function fetchFeed(key, cfg) {
@@ -104,10 +157,116 @@ async function fetchFeed(key, cfg) {
 }
 
 function renderAllFromCache() {
-  Object.entries(feed_configs).forEach(([key, cfg]) => {
+  Object.entries(state.activeFeedConfigs).forEach(([key, cfg]) => {
     const items = state.itemsByFeed.get(key);
     if (items) renderFeed(key, cfg, items);
   });
+}
+
+function buildActiveFeedConfigs() {
+  const next = {};
+  for (const key of state.selectedFeedKeys) {
+    const meta = FEED_CATALOG[key];
+    if (!meta) continue;
+    next[key] = {
+      key,
+      label: meta.label,
+      headerClass: meta.headerClass || "",
+      url: buildRss2JsonUrl(meta.rssUrl),
+      container: null,
+      getImage: (item) => getImageForItem(meta.imageMode, item),
+    };
+  }
+  state.activeFeedConfigs = next;
+}
+
+function renderActiveFeedsSkeleton() {
+  if (!ui.feedsRoot) return;
+  ui.feedsRoot.innerHTML = "";
+
+  for (const [key, cfg] of Object.entries(state.activeFeedConfigs)) {
+    const hrTop = document.createElement("hr");
+    const heading = document.createElement("h2");
+    heading.className = `feed-heading ${cfg.headerClass || ""}`.trim();
+    heading.textContent = cfg.label;
+    const hrBottom = document.createElement("hr");
+
+    const grid = document.createElement("div");
+    grid.className = "feed-grid";
+    grid.dataset.feedKey = key;
+
+    ui.feedsRoot.appendChild(hrTop);
+    ui.feedsRoot.appendChild(heading);
+    ui.feedsRoot.appendChild(hrBottom);
+    ui.feedsRoot.appendChild(grid);
+
+    cfg.container = grid;
+  }
+}
+
+function renderFeedSelectionList() {
+  if (!ui.feedsList) return;
+
+  ui.feedsList.innerHTML = "";
+  const selected = new Set(state.selectedFeedKeys);
+
+  Object.entries(FEED_CATALOG).forEach(([key, meta]) => {
+    const row = document.createElement("label");
+    row.className = "feed-option";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.value = key;
+    checkbox.checked = selected.has(key);
+
+    const text = document.createElement("div");
+    const title = document.createElement("strong");
+    title.textContent = meta.label;
+    const url = document.createElement("small");
+    url.textContent = meta.rssUrl;
+
+    text.appendChild(title);
+    text.appendChild(url);
+
+    row.appendChild(checkbox);
+    row.appendChild(text);
+    ui.feedsList.appendChild(row);
+  });
+}
+
+function getSelectedFeedKeysFromModal() {
+  if (!ui.feedsList) return [];
+  return Array.from(ui.feedsList.querySelectorAll('input[type="checkbox"]'))
+    .filter((el) => el.checked)
+    .map((el) => el.value)
+    .filter((key) => !!FEED_CATALOG[key]);
+}
+
+function buildRss2JsonUrl(rssUrl) {
+  return `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(
+    rssUrl,
+  )}`;
+}
+
+function getImageForItem(mode, item) {
+  if (mode === "enclosure") {
+    return item?.enclosure?.link || "https://via.placeholder.com/150";
+  }
+
+  // Default: try to parse first <img> from content
+  const content = item?.content || item?.description || "";
+  if (content) {
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(content, "text/html");
+      const imgTag = doc.querySelector("img");
+      if (imgTag?.src) return imgTag.src;
+    } catch {
+      // ignore
+    }
+  }
+
+  return "https://via.placeholder.com/150";
 }
 
 function renderFeed(feedKey, cfg, items) {
@@ -144,9 +303,11 @@ function createItemCard(summary, { showActions }) {
   itemTitle.textContent = summary.title || "(ohne Titel)";
 
   const dateTag = document.createElement("p");
+  dateTag.className = "card-date";
   dateTag.textContent = formatPubDate(summary.pubDate);
 
   const descrTag = document.createElement("p");
+  descrTag.className = "card-desc";
   descrTag.textContent = summary.description || "";
 
   const itemLink = document.createElement("a");
@@ -155,10 +316,14 @@ function createItemCard(summary, { showActions }) {
   itemLink.target = "_blank";
   itemLink.rel = "noopener noreferrer";
 
-  itemDiv.appendChild(itemTitle);
-  itemDiv.appendChild(dateTag);
-  itemDiv.appendChild(descrTag);
-  itemDiv.appendChild(itemLink);
+  const content = document.createElement("div");
+  content.className = "card-content";
+  content.appendChild(itemTitle);
+  content.appendChild(dateTag);
+  content.appendChild(descrTag);
+
+  const footer = document.createElement("div");
+  footer.className = "card-footer";
 
   if (showActions) {
     const actions = document.createElement("div");
@@ -190,8 +355,13 @@ function createItemCard(summary, { showActions }) {
 
     actions.appendChild(favBtn);
     actions.appendChild(laterBtn);
-    itemDiv.appendChild(actions);
+    footer.appendChild(actions);
   }
+
+  footer.appendChild(itemLink);
+
+  itemDiv.appendChild(content);
+  itemDiv.appendChild(footer);
 
   return itemDiv;
 }
@@ -312,8 +482,20 @@ function loadStateFromStorage() {
   state.favorites = readJson(STORAGE_KEYS.favorites, {});
   state.readLater = readJson(STORAGE_KEYS.readLater, {});
 
+  const selected = readJson(STORAGE_KEYS.selectedFeeds, []);
+  state.selectedFeedKeys = Array.isArray(selected)
+    ? selected.filter((k) => !!FEED_CATALOG[k])
+    : [];
+  if (state.selectedFeedKeys.length === 0) {
+    state.selectedFeedKeys = getDefaultSelectedFeedKeys();
+  }
+
   const prefs = readJson(STORAGE_KEYS.prefs, {});
   state.sortOrder = prefs.sortOrder === "oldest" ? "oldest" : "newest";
+}
+
+function getDefaultSelectedFeedKeys() {
+  return ["heise", "tagesschau", "spiegel"];
 }
 
 function saveLists() {
@@ -323,6 +505,10 @@ function saveLists() {
 
 function savePrefs() {
   writeJson(STORAGE_KEYS.prefs, { sortOrder: state.sortOrder });
+}
+
+function saveSelectedFeeds() {
+  writeJson(STORAGE_KEYS.selectedFeeds, state.selectedFeedKeys);
 }
 
 function readJson(key, fallback) {
