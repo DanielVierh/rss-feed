@@ -186,6 +186,7 @@ const FEED_CATALOG = {
 };
 
 const DEFAULT_IMAGE_URL = "https://via.placeholder.com/600x360?text=No+Image";
+const DEFAULT_PREVIEW_TEXT = "Keine Vorschau verfügbar.";
 
 const ui = {
   refreshBtn: document.getElementById("btn_refresh"),
@@ -533,7 +534,7 @@ function getImageForItem(mode, item) {
     if (extracted) return extracted;
   }
 
-  return DEFAULT_IMAGE_URL;
+  return "";
 }
 
 function extractImageFromHtml(html, baseUrl) {
@@ -606,6 +607,15 @@ function createItemCard(summary, { showActions }) {
   const itemDiv = document.createElement("div");
   itemDiv.classList.add("grid-item");
 
+  const placeholder =
+    summary.placeholderImage ||
+    buildPlaceholderImageDataUrl(
+      summary.feedKey || "Feed",
+      summary.title || "",
+    );
+
+  if (!summary.image) summary.image = placeholder;
+
   if (summary.image) {
     const itemImage = document.createElement("img");
     itemImage.src = summary.image;
@@ -613,7 +623,7 @@ function createItemCard(summary, { showActions }) {
     itemImage.loading = "lazy";
     itemImage.onerror = () => {
       itemImage.onerror = null;
-      itemImage.src = DEFAULT_IMAGE_URL;
+      itemImage.src = placeholder || DEFAULT_IMAGE_URL;
     };
     itemDiv.appendChild(itemImage);
   }
@@ -627,7 +637,7 @@ function createItemCard(summary, { showActions }) {
 
   const descrTag = document.createElement("p");
   descrTag.className = "card-desc";
-  descrTag.textContent = summary.description || "";
+  descrTag.textContent = summary.description || DEFAULT_PREVIEW_TEXT;
 
   const itemLink = document.createElement("a");
   itemLink.href = summary.link;
@@ -725,15 +735,94 @@ function normalizeItem(feedKey, item, cfg) {
   const id = String(
     item.link || item.guid || `${feedKey}:${item.title}:${item.pubDate}`,
   );
+
+  const placeholderImage = buildPlaceholderImageDataUrl(
+    cfg?.label || feedKey,
+    item?.title || "",
+  );
+
+  const img = safeGetImage(cfg, item);
+  const previewText = buildPreviewText(item);
+
   return {
     id,
     feedKey,
     title: item.title || "",
     link: item.link || "#",
     pubDate: item.pubDate || "",
-    description: item.description || "",
-    image: safeGetImage(cfg, item),
+    description: previewText,
+    image: img || placeholderImage,
+    placeholderImage,
   };
+}
+
+function buildPreviewText(item) {
+  const raw = (item?.description || item?.content || "").trim();
+  const text = extractTextFromHtml(raw);
+  const normalized = normalizeWhitespace(text);
+  const finalText = normalized || DEFAULT_PREVIEW_TEXT;
+  return truncateText(finalText, 240);
+}
+
+function extractTextFromHtml(htmlOrText) {
+  if (!htmlOrText) return "";
+  const s = String(htmlOrText);
+  if (!/[<>]/.test(s)) return s;
+
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(s, "text/html");
+    return doc.body?.textContent || "";
+  } catch {
+    return s.replace(/<[^>]*>/g, " ");
+  }
+}
+
+function normalizeWhitespace(text) {
+  return String(text || "")
+    .replace(/\u00a0/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function truncateText(text, maxLen) {
+  const s = String(text || "");
+  if (s.length <= maxLen) return s;
+  return s.slice(0, Math.max(0, maxLen - 1)).trimEnd() + "…";
+}
+
+function buildPlaceholderImageDataUrl(feedLabel, title) {
+  const safeLabel = normalizeWhitespace(feedLabel).slice(0, 26) || "Feed";
+  const safeTitle = normalizeWhitespace(title).slice(0, 52);
+  const svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="360" viewBox="0 0 600 360">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1f1f1f"/>
+      <stop offset="1" stop-color="#0f0f0f"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="360" fill="url(#g)"/>
+  <rect x="24" y="24" width="552" height="312" rx="18" fill="#151515" stroke="#2a2a2a"/>
+  <text x="48" y="110" font-family="system-ui, -apple-system, Segoe UI, Roboto, Arial" font-size="30" fill="#ffffff" font-weight="700">${escapeXml(
+    safeLabel,
+  )}</text>
+  <text x="48" y="150" font-family="system-ui, -apple-system, Segoe UI, Roboto, Arial" font-size="16" fill="#cfcfcf">${escapeXml(
+    safeTitle,
+  )}</text>
+  <text x="48" y="300" font-family="system-ui, -apple-system, Segoe UI, Roboto, Arial" font-size="14" fill="#7c7c7c">Kein Bild im Feed</text>
+</svg>`;
+
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+
+function escapeXml(s) {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
 }
 
 function safeGetImage(cfg, item) {
