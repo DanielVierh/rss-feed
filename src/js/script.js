@@ -204,6 +204,7 @@ const ui = {
   customFeedUrl: document.getElementById("custom_feed_url"),
   addCustomFeedBtn: document.getElementById("btn_add_custom_feed"),
   customFeedError: document.getElementById("custom_feed_error"),
+  scrollTopBtn: document.getElementById("scroll_top"),
 };
 
 const STORAGE_KEYS = {
@@ -287,9 +288,27 @@ function init() {
     ui.refreshBtn.addEventListener("click", () => fetchAllFeeds());
   }
 
+  initScrollTopButton();
+
   setLoadingAll();
   renderLists();
   setTimeout(() => fetchAllFeeds(), 300);
+}
+
+function initScrollTopButton() {
+  if (!ui.scrollTopBtn) return;
+
+  const updateVisibility = () => {
+    const y = window.scrollY || document.documentElement.scrollTop || 0;
+    ui.scrollTopBtn.classList.toggle("is-visible", y > 400);
+  };
+
+  window.addEventListener("scroll", updateVisibility, { passive: true });
+  updateVisibility();
+
+  ui.scrollTopBtn.addEventListener("click", () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
 }
 
 function setLoadingAll() {
