@@ -1,41 +1,191 @@
 const FEED_CATALOG = {
+  // Nachrichten (DE)
   heise: {
+    category: "Nachrichten (DE)",
     label: "Heise",
     rssUrl: "https://heise.de/rss/heise-atom.xml",
     headerClass: "",
     imageMode: "content_img",
   },
   tagesschau: {
+    category: "Nachrichten (DE)",
     label: "Tagesschau",
     rssUrl: "https://www.tagesschau.de/xml/rss2",
     headerClass: "tagesschau",
     imageMode: "content_img",
   },
   spiegel: {
+    category: "Nachrichten (DE)",
     label: "Spiegel News",
     rssUrl: "https://www.spiegel.de/schlagzeilen/tops/index.rss",
     headerClass: "spiegel",
     imageMode: "enclosure",
   },
   zeit: {
+    category: "Nachrichten (DE)",
     label: "DIE ZEIT",
     rssUrl: "https://newsfeed.zeit.de/index",
     headerClass: "",
     imageMode: "content_img",
   },
   faz: {
+    category: "Nachrichten (DE)",
     label: "FAZ",
     rssUrl: "https://www.faz.net/rss/aktuell/",
     headerClass: "",
     imageMode: "content_img",
   },
   sueddeutsche: {
+    category: "Nachrichten (DE)",
     label: "Süddeutsche Zeitung",
     rssUrl: "https://rss.sueddeutsche.de/rss/Topthemen",
     headerClass: "",
     imageMode: "content_img",
   },
+
+  // Technik & Gadgets
+  golem: {
+    category: "Technik & Gadgets",
+    label: "Golem.de",
+    rssUrl: "https://rss.golem.de/rss.php?feed=RSS2.0",
+    headerClass: "",
+    imageMode: "content_img",
+  },
+  theverge: {
+    category: "Technik & Gadgets",
+    label: "The Verge",
+    rssUrl: "https://www.theverge.com/rss/index.xml",
+    headerClass: "",
+    imageMode: "content_img",
+  },
+  wired: {
+    category: "Technik & Gadgets",
+    label: "WIRED",
+    rssUrl: "https://www.wired.com/feed/rss",
+    headerClass: "",
+    imageMode: "content_img",
+  },
+  arstechnica: {
+    category: "Technik & Gadgets",
+    label: "Ars Technica",
+    rssUrl: "https://feeds.arstechnica.com/arstechnica/index",
+    headerClass: "",
+    imageMode: "content_img",
+  },
+  engadget: {
+    category: "Technik & Gadgets",
+    label: "Engadget",
+    rssUrl: "https://www.engadget.com/rss.xml",
+    headerClass: "",
+    imageMode: "content_img",
+  },
+  techcrunch: {
+    category: "Technik & Gadgets",
+    label: "TechCrunch",
+    rssUrl: "https://techcrunch.com/feed/",
+    headerClass: "",
+    imageMode: "content_img",
+  },
+
+  // Programmieren
+  hackernews: {
+    category: "Programmieren",
+    label: "Hacker News",
+    rssUrl: "https://news.ycombinator.com/rss",
+    headerClass: "",
+    imageMode: "content_img",
+  },
+  lobsters: {
+    category: "Programmieren",
+    label: "Lobsters",
+    rssUrl: "https://lobste.rs/rss",
+    headerClass: "",
+    imageMode: "content_img",
+  },
+  devto: {
+    category: "Programmieren",
+    label: "DEV Community",
+    rssUrl: "https://dev.to/feed",
+    headerClass: "",
+    imageMode: "content_img",
+  },
+  githubblog: {
+    category: "Programmieren",
+    label: "GitHub Blog",
+    rssUrl: "https://github.blog/feed/",
+    headerClass: "",
+    imageMode: "content_img",
+  },
+  stackoverflowblog: {
+    category: "Programmieren",
+    label: "Stack Overflow Blog",
+    rssUrl: "https://stackoverflow.blog/feed/",
+    headerClass: "",
+    imageMode: "content_img",
+  },
+  smashing: {
+    category: "Programmieren",
+    label: "Smashing Magazine",
+    rssUrl: "https://www.smashingmagazine.com/feed/",
+    headerClass: "",
+    imageMode: "content_img",
+  },
+  csstricks: {
+    category: "Programmieren",
+    label: "CSS-Tricks",
+    rssUrl: "https://css-tricks.com/feed/",
+    headerClass: "",
+    imageMode: "content_img",
+  },
+
+  // Python
+  planetpython: {
+    category: "Python",
+    label: "Planet Python",
+    rssUrl: "https://planetpython.org/rss20.xml",
+    headerClass: "",
+    imageMode: "content_img",
+  },
+  pythoninsider: {
+    category: "Python",
+    label: "Python Insider",
+    rssUrl: "https://feeds.feedburner.com/PythonInsider",
+    headerClass: "",
+    imageMode: "content_img",
+  },
+
+  // Fotografie
+  petapixel: {
+    category: "Fotografie",
+    label: "PetaPixel",
+    rssUrl: "https://petapixel.com/feed/",
+    headerClass: "",
+    imageMode: "content_img",
+  },
+  fstoppers: {
+    category: "Fotografie",
+    label: "Fstoppers",
+    rssUrl: "https://fstoppers.com/feed",
+    headerClass: "",
+    imageMode: "content_img",
+  },
+  dps: {
+    category: "Fotografie",
+    label: "Digital Photography School",
+    rssUrl: "https://digital-photography-school.com/feed/",
+    headerClass: "",
+    imageMode: "content_img",
+  },
+  phoblographer: {
+    category: "Fotografie",
+    label: "The Phoblographer",
+    rssUrl: "https://www.thephoblographer.com/feed/",
+    headerClass: "",
+    imageMode: "content_img",
+  },
 };
+
+const DEFAULT_IMAGE_URL = "https://via.placeholder.com/600x360?text=No+Image";
 
 const ui = {
   refreshBtn: document.getElementById("btn_refresh"),
@@ -49,6 +199,10 @@ const ui = {
   feedsModal: document.getElementById("feeds_modal"),
   feedsList: document.getElementById("feeds_list"),
   feedsSave: document.getElementById("feeds_save"),
+  customFeedLabel: document.getElementById("custom_feed_label"),
+  customFeedUrl: document.getElementById("custom_feed_url"),
+  addCustomFeedBtn: document.getElementById("btn_add_custom_feed"),
+  customFeedError: document.getElementById("custom_feed_error"),
 };
 
 const STORAGE_KEYS = {
@@ -56,6 +210,7 @@ const STORAGE_KEYS = {
   readLater: "rss-feed:readlater:v1",
   prefs: "rss-feed:prefs:v1",
   selectedFeeds: "rss-feed:selected-feeds:v1",
+  customFeeds: "rss-feed:custom-feeds:v1",
 };
 
 const state = {
@@ -65,6 +220,7 @@ const state = {
   readLater: {},
   selectedFeedKeys: [],
   activeFeedConfigs: {},
+  customFeeds: {},
 };
 
 window.onload = init;
@@ -89,6 +245,12 @@ function init() {
     ui.manageFeedsBtn.addEventListener("click", () => {
       renderFeedSelectionList();
       ui.feedsModal.showModal();
+    });
+  }
+
+  if (ui.addCustomFeedBtn) {
+    ui.addCustomFeedBtn.addEventListener("click", () => {
+      addCustomFeedFromModal();
     });
   }
 
@@ -166,7 +328,7 @@ function renderAllFromCache() {
 function buildActiveFeedConfigs() {
   const next = {};
   for (const key of state.selectedFeedKeys) {
-    const meta = FEED_CATALOG[key];
+    const meta = getFeedMeta(key);
     if (!meta) continue;
     next[key] = {
       key,
@@ -210,27 +372,65 @@ function renderFeedSelectionList() {
   ui.feedsList.innerHTML = "";
   const selected = new Set(state.selectedFeedKeys);
 
-  Object.entries(FEED_CATALOG).forEach(([key, meta]) => {
-    const row = document.createElement("label");
-    row.className = "feed-option";
+  const entries = getAllCatalogEntries();
+  const order = [
+    "Nachrichten (DE)",
+    "Technik & Gadgets",
+    "Programmieren",
+    "Python",
+    "Fotografie",
+    "Eigene Feeds",
+    "Sonstiges",
+  ];
 
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.value = key;
-    checkbox.checked = selected.has(key);
+  const byCategory = new Map();
+  entries.forEach(({ key, meta }) => {
+    const category = meta.category || "Sonstiges";
+    if (!byCategory.has(category)) byCategory.set(category, []);
+    byCategory.get(category).push({ key, meta });
+  });
 
-    const text = document.createElement("div");
-    const title = document.createElement("strong");
-    title.textContent = meta.label;
-    const url = document.createElement("small");
-    url.textContent = meta.rssUrl;
+  const categories = Array.from(byCategory.keys()).sort((a, b) => {
+    const ia = order.indexOf(a);
+    const ib = order.indexOf(b);
+    if (ia === -1 && ib === -1) return a.localeCompare(b);
+    if (ia === -1) return 1;
+    if (ib === -1) return -1;
+    return ia - ib;
+  });
 
-    text.appendChild(title);
-    text.appendChild(url);
+  categories.forEach((category) => {
+    const title = document.createElement("div");
+    title.className = "feeds-category-title";
+    title.textContent = category;
+    ui.feedsList.appendChild(title);
 
-    row.appendChild(checkbox);
-    row.appendChild(text);
-    ui.feedsList.appendChild(row);
+    byCategory
+      .get(category)
+      .slice()
+      .sort((a, b) => a.meta.label.localeCompare(b.meta.label))
+      .forEach(({ key, meta }) => {
+        const row = document.createElement("label");
+        row.className = "feed-option";
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.value = key;
+        checkbox.checked = selected.has(key);
+
+        const text = document.createElement("div");
+        const label = document.createElement("strong");
+        label.textContent = meta.label;
+        const url = document.createElement("small");
+        url.textContent = meta.rssUrl;
+
+        text.appendChild(label);
+        text.appendChild(url);
+
+        row.appendChild(checkbox);
+        row.appendChild(text);
+        ui.feedsList.appendChild(row);
+      });
   });
 }
 
@@ -239,7 +439,70 @@ function getSelectedFeedKeysFromModal() {
   return Array.from(ui.feedsList.querySelectorAll('input[type="checkbox"]'))
     .filter((el) => el.checked)
     .map((el) => el.value)
-    .filter((key) => !!FEED_CATALOG[key]);
+    .filter((key) => !!getFeedMeta(key));
+}
+
+function getFeedMeta(key) {
+  return FEED_CATALOG[key] || state.customFeeds[key];
+}
+
+function getAllCatalogEntries() {
+  const builtIn = Object.entries(FEED_CATALOG).map(([key, meta]) => ({
+    key,
+    meta,
+  }));
+  const custom = Object.entries(state.customFeeds).map(([key, meta]) => ({
+    key,
+    meta,
+  }));
+  return [...builtIn, ...custom];
+}
+
+function addCustomFeedFromModal() {
+  clearCustomFeedError();
+
+  const label = (ui.customFeedLabel?.value || "").trim();
+  const rssUrl = (ui.customFeedUrl?.value || "").trim();
+
+  if (!label) {
+    setCustomFeedError("Bitte einen Namen eingeben.");
+    return;
+  }
+  if (!rssUrl) {
+    setCustomFeedError("Bitte eine RSS-URL eingeben.");
+    return;
+  }
+  if (!/^https?:\/\//i.test(rssUrl)) {
+    setCustomFeedError("Die RSS-URL muss mit http:// oder https:// beginnen.");
+    return;
+  }
+
+  const key = `custom_${Date.now()}`;
+  state.customFeeds[key] = {
+    category: "Eigene Feeds",
+    label,
+    rssUrl,
+    headerClass: "",
+    imageMode: "content_img",
+  };
+
+  saveCustomFeeds();
+
+  // Im Modal direkt vorauswählen (Persistenz der Auswahl erst bei "Speichern")
+  if (!state.selectedFeedKeys.includes(key)) state.selectedFeedKeys.push(key);
+
+  if (ui.customFeedLabel) ui.customFeedLabel.value = "";
+  if (ui.customFeedUrl) ui.customFeedUrl.value = "";
+
+  renderFeedSelectionList();
+}
+
+function setCustomFeedError(message) {
+  if (ui.customFeedError) ui.customFeedError.textContent = message;
+}
+
+function clearCustomFeedError() {
+  if (ui.customFeedError) ui.customFeedError.textContent = "";
 }
 
 function buildRss2JsonUrl(rssUrl) {
@@ -249,24 +512,76 @@ function buildRss2JsonUrl(rssUrl) {
 }
 
 function getImageForItem(mode, item) {
-  if (mode === "enclosure") {
-    return item?.enclosure?.link || "https://via.placeholder.com/150";
+  const baseUrl = item?.link || "";
+
+  // rss2json often provides a direct thumbnail
+  const thumb = normalizeImageUrl(item?.thumbnail, baseUrl);
+  if (thumb) return thumb;
+
+  // media via enclosure
+  const enclosure = normalizeImageUrl(
+    item?.enclosure?.link || item?.enclosure?.url,
+    baseUrl,
+  );
+  if (mode === "enclosure" && enclosure) return enclosure;
+  if (enclosure) return enclosure;
+
+  // Try to parse <img> from content/description (including data-src/srcset)
+  const htmlCandidates = [item?.content, item?.description].filter(Boolean);
+  for (const html of htmlCandidates) {
+    const extracted = extractImageFromHtml(String(html), baseUrl);
+    if (extracted) return extracted;
   }
 
-  // Default: try to parse first <img> from content
-  const content = item?.content || item?.description || "";
-  if (content) {
-    try {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(content, "text/html");
-      const imgTag = doc.querySelector("img");
-      if (imgTag?.src) return imgTag.src;
-    } catch {
-      // ignore
-    }
-  }
+  return DEFAULT_IMAGE_URL;
+}
 
-  return "https://via.placeholder.com/150";
+function extractImageFromHtml(html, baseUrl) {
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, "text/html");
+    const img = doc.querySelector("img");
+    if (!img) return "";
+
+    const direct =
+      img.getAttribute("src") ||
+      img.getAttribute("data-src") ||
+      img.getAttribute("data-original") ||
+      img.getAttribute("data-lazy-src") ||
+      "";
+    const normalizedDirect = normalizeImageUrl(direct, baseUrl);
+    if (normalizedDirect) return normalizedDirect;
+
+    const srcset =
+      img.getAttribute("srcset") || img.getAttribute("data-srcset") || "";
+    const fromSrcset = parseFirstSrcsetUrl(srcset);
+    return normalizeImageUrl(fromSrcset, baseUrl);
+  } catch {
+    return "";
+  }
+}
+
+function parseFirstSrcsetUrl(srcset) {
+  if (!srcset) return "";
+  const first = srcset.split(",")[0]?.trim();
+  if (!first) return "";
+  return first.split(/\s+/)[0] || "";
+}
+
+function normalizeImageUrl(url, baseUrl) {
+  if (!url) return "";
+  let s = String(url).trim();
+  if (!s) return "";
+
+  if (s.startsWith("data:")) return "";
+  if (s.startsWith("//")) s = `https:${s}`;
+
+  try {
+    if (baseUrl) return new URL(s, baseUrl).toString();
+    return /^https?:\/\//i.test(s) ? s : "";
+  } catch {
+    return /^https?:\/\//i.test(s) ? s : "";
+  }
 }
 
 function renderFeed(feedKey, cfg, items) {
@@ -296,6 +611,10 @@ function createItemCard(summary, { showActions }) {
     itemImage.src = summary.image;
     itemImage.alt = summary.title || "Artikelbild";
     itemImage.loading = "lazy";
+    itemImage.onerror = () => {
+      itemImage.onerror = null;
+      itemImage.src = DEFAULT_IMAGE_URL;
+    };
     itemDiv.appendChild(itemImage);
   }
 
@@ -482,9 +801,14 @@ function loadStateFromStorage() {
   state.favorites = readJson(STORAGE_KEYS.favorites, {});
   state.readLater = readJson(STORAGE_KEYS.readLater, {});
 
+  state.customFeeds = readJson(STORAGE_KEYS.customFeeds, {});
+  if (!state.customFeeds || typeof state.customFeeds !== "object") {
+    state.customFeeds = {};
+  }
+
   const selected = readJson(STORAGE_KEYS.selectedFeeds, []);
   state.selectedFeedKeys = Array.isArray(selected)
-    ? selected.filter((k) => !!FEED_CATALOG[k])
+    ? selected.filter((k) => !!getFeedMeta(k))
     : [];
   if (state.selectedFeedKeys.length === 0) {
     state.selectedFeedKeys = getDefaultSelectedFeedKeys();
@@ -509,6 +833,10 @@ function savePrefs() {
 
 function saveSelectedFeeds() {
   writeJson(STORAGE_KEYS.selectedFeeds, state.selectedFeedKeys);
+}
+
+function saveCustomFeeds() {
+  writeJson(STORAGE_KEYS.customFeeds, state.customFeeds);
 }
 
 function readJson(key, fallback) {

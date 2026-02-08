@@ -41,6 +41,34 @@
             gespeichert.
           </p>
           <div id="feeds_list" class="feeds-list"></div>
+
+          <div class="modal-divider"></div>
+          <h4 class="modal-subtitle">Eigenen Feed hinzufügen</h4>
+          <div
+            class="custom-feed-form"
+            aria-label="Eigenen RSS Feed hinzufügen"
+          >
+            <input
+              id="custom_feed_label"
+              type="text"
+              placeholder="Name (z.B. Mein Blog)"
+              autocomplete="off"
+            />
+            <input
+              id="custom_feed_url"
+              type="url"
+              placeholder="RSS-URL (https://…/feed.xml)"
+              autocomplete="off"
+            />
+            <button
+              id="btn_add_custom_feed"
+              class="btn-secondary"
+              type="button"
+            >
+              Hinzufügen
+            </button>
+            <p id="custom_feed_error" class="form-error" aria-live="polite"></p>
+          </div>
         </div>
 
         <footer class="modal-footer">
