@@ -868,7 +868,7 @@ function buildPreviewText(item) {
   const text = extractTextFromHtml(raw);
   const normalized = normalizeWhitespace(text);
   const finalText = normalized || DEFAULT_PREVIEW_TEXT;
-  return truncateText(finalText, 240);
+  return truncateText(finalText, 300);
 }
 
 function extractTextFromHtml(htmlOrText) {
