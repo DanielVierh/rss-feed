@@ -187,6 +187,7 @@ const FEED_CATALOG = {
 
 const DEFAULT_IMAGE_URL = "https://via.placeholder.com/600x360?text=No+Image";
 const DEFAULT_PREVIEW_TEXT = "Keine Vorschau verfügbar.";
+const MAX_ITEMS_PER_FEED = 30;
 
 const ui = {
   refreshBtn: document.getElementById("btn_refresh"),
@@ -218,6 +219,8 @@ const STORAGE_KEYS = {
 const state = {
   sortOrder: "newest",
   itemsByFeed: new Map(),
+  articleImageCache: new Map(),
+  articleImageRequests: new Map(),
   favorites: {},
   readLater: {},
   selectedFeedKeys: [],
@@ -328,15 +331,84 @@ function fetchAllFeeds() {
 async function fetchFeed(key, cfg) {
   try {
     const res = await fetch(cfg.url);
-    const data = await res.json();
-    const items = Array.isArray(data.items) ? data.items : [];
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.message || `Feed-Proxy antwortete mit HTTP ${res.status}.`);
+    }
+
+    const xml = await res.text();
+    const items = parseFeedXml(xml);
     state.itemsByFeed.set(key, items);
     renderFeed(key, cfg, items);
   } catch (error) {
-    console.error(`Error fetching data:`, error);
+    console.error(`Fehler beim Laden von ${cfg.label}:`, error);
     if (cfg.container)
       cfg.container.innerHTML = `<h1>Fehler beim Laden der Daten</h1>`;
   }
+}
+
+function parseFeedXml(xml) {
+  const doc = new DOMParser().parseFromString(xml, "application/xml");
+  if (doc.querySelector("parsererror")) {
+    throw new Error("Der Feed-Proxy hat kein gültiges RSS-/Atom-XML geliefert.");
+  }
+
+  const normalizeTagName = (element) =>
+    String(element?.localName || element?.nodeName || "")
+      .toLowerCase()
+      .split(":")
+      .pop();
+  const hasTag = (element, ...names) =>
+    names.includes(normalizeTagName(element));
+  const getDescendants = (entry) =>
+    Array.from(entry.getElementsByTagName("*"));
+  const findFirstByTag = (nodes, ...names) =>
+    nodes.find((node) => hasTag(node, ...names));
+  const findFirstByPriority = (nodes, ...names) => {
+    for (const name of names) {
+      const hit = nodes.find((node) => hasTag(node, name));
+      if (hit) return hit;
+    }
+    return undefined;
+  };
+  const getNodeText = (node) => node?.textContent?.trim() || "";
+  const root = doc.querySelector("channel, feed") || doc.documentElement;
+  const entries = Array.from(root.children).filter((element) =>
+    hasTag(element, "item", "entry"),
+  );
+
+  return entries.map((entry) => {
+    const children = Array.from(entry.children);
+    const descendants = getDescendants(entry);
+    const findChild = (...names) => findFirstByPriority(children, ...names);
+    const findDescendant = (...names) =>
+      findFirstByPriority(descendants, ...names);
+    const getText = (...names) =>
+      getNodeText(findChild(...names)) || getNodeText(findDescendant(...names));
+    const links = children.filter((child) => hasTag(child, "link"));
+    const linkElement = links[0] || findDescendant("link");
+    const alternateLink = links.find((child) => child.getAttribute("rel") === "alternate");
+    const enclosure = findDescendant("enclosure", "content");
+    const thumbnail = findDescendant("thumbnail");
+
+    return {
+      title: getText("title"),
+      link:
+        alternateLink?.getAttribute("href") ||
+        linkElement?.getAttribute("href") ||
+        getText("link", "guid", "id"),
+      pubDate: getText("pubdate", "published", "updated", "date"),
+      description: getText("description", "summary"),
+      content: getText("encoded", "content", "description", "summary"),
+      thumbnail: thumbnail?.getAttribute("url") || "",
+      enclosure: {
+        url:
+          enclosure?.getAttribute("url") ||
+          enclosure?.getAttribute("href") ||
+          "",
+      },
+    };
+  }).slice(0, MAX_ITEMS_PER_FEED);
 }
 
 function renderAllFromCache() {
@@ -355,7 +427,7 @@ function buildActiveFeedConfigs() {
       key,
       label: meta.label,
       headerClass: meta.headerClass || "",
-      url: buildRss2JsonUrl(meta.rssUrl),
+      url: buildFeedProxyUrl(meta.rssUrl),
       container: null,
       getImage: (item) => getImageForItem(meta.imageMode, item),
     };
@@ -550,10 +622,8 @@ function clearCustomFeedError() {
   if (ui.customFeedError) ui.customFeedError.textContent = "";
 }
 
-function buildRss2JsonUrl(rssUrl) {
-  return `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(
-    rssUrl,
-  )}`;
+function buildFeedProxyUrl(rssUrl) {
+  return `/api/rss?url=${encodeURIComponent(rssUrl)}`;
 }
 
 function getImageForItem(mode, item) {
@@ -629,6 +699,46 @@ function normalizeImageUrl(url, baseUrl) {
   }
 }
 
+function isPlaceholderImage(url) {
+  return String(url || "").startsWith("data:image/svg+xml");
+}
+
+async function resolveArticleImage(articleUrl) {
+  if (!articleUrl) return "";
+
+  if (state.articleImageCache.has(articleUrl)) {
+    return state.articleImageCache.get(articleUrl) || "";
+  }
+  if (state.articleImageRequests.has(articleUrl)) {
+    return state.articleImageRequests.get(articleUrl);
+  }
+
+  const request = (async () => {
+    try {
+      const res = await fetch(`/api/page-meta?url=${encodeURIComponent(articleUrl)}`);
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(
+          error.message || `Meta-Proxy antwortete mit HTTP ${res.status}.`,
+        );
+      }
+      const data = await res.json();
+      const img = normalizeImageUrl(data?.image || "", articleUrl);
+      state.articleImageCache.set(articleUrl, img || "");
+      return img || "";
+    } catch (error) {
+      console.warn(`Konnte Artikelbild nicht laden:`, error);
+      state.articleImageCache.set(articleUrl, "");
+      return "";
+    } finally {
+      state.articleImageRequests.delete(articleUrl);
+    }
+  })();
+
+  state.articleImageRequests.set(articleUrl, request);
+  return request;
+}
+
 function renderFeed(feedKey, cfg, items) {
   if (!cfg.container) return;
 
@@ -664,6 +774,7 @@ function createItemCard(summary, { showActions }) {
       summary.feedKey || "Feed",
       summary.title || "",
     );
+  const normalizedLink = normalizeArticleUrl(summary.link);
 
   if (!summary.image) summary.image = placeholder;
 
@@ -677,6 +788,22 @@ function createItemCard(summary, { showActions }) {
       itemImage.src = placeholder || DEFAULT_IMAGE_URL;
     };
     itemDiv.appendChild(itemImage);
+
+    if (
+      normalizedLink &&
+      isPlaceholderImage(summary.image) &&
+      !state.articleImageCache.has(normalizedLink)
+    ) {
+      resolveArticleImage(normalizedLink).then((imageUrl) => {
+        if (!imageUrl) return;
+        if (!itemImage.isConnected) return;
+        if (!isPlaceholderImage(itemImage.src)) return;
+        itemImage.src = imageUrl;
+      });
+    } else if (normalizedLink) {
+      const cached = state.articleImageCache.get(normalizedLink) || "";
+      if (cached && isPlaceholderImage(itemImage.src)) itemImage.src = cached;
+    }
   }
 
   const itemTitle = document.createElement("h3");
@@ -690,7 +817,6 @@ function createItemCard(summary, { showActions }) {
   descrTag.className = "card-desc";
   descrTag.textContent = summary.description || DEFAULT_PREVIEW_TEXT;
 
-  const normalizedLink = normalizeArticleUrl(summary.link);
   const itemLink = normalizedLink ? document.createElement("a") : null;
   if (itemLink) {
     itemLink.href = normalizedLink;
