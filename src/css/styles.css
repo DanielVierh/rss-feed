@@ -236,4 +236,99 @@ h2.spiegel {
 }
 h2.tagesschau {
   background-color: rgb(15, 92, 143);
-}/*# sourceMappingURL=styles.css.map */
+}
+
+#feeds_modal {
+  border: 1px solid #3a3a3a;
+  border-radius: 12px;
+  background: #111;
+  color: #fff;
+  width: min(840px, 92vw);
+  max-height: 88vh;
+  padding: 0;
+}
+#feeds_modal::backdrop {
+  background: rgba(0, 0, 0, 0.65);
+}
+
+.modal {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.modal-header,
+.modal-footer {
+  padding: 14px 18px;
+  background: #161616;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #2e2e2e;
+}
+
+.modal-body {
+  padding: 16px 18px;
+  overflow: auto;
+}
+
+.modal-hint {
+  margin-top: 0;
+  opacity: 0.86;
+}
+
+#feeds_list {
+  display: grid;
+  gap: 8px;
+}
+
+.feeds-category-title {
+  margin-top: 14px;
+  margin-bottom: 4px;
+  font-weight: 700;
+  color: #9ecbff;
+}
+
+.feed-option {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid #2f2f2f;
+  border-radius: 8px;
+  background: #1a1a1a;
+}
+
+.feed-option-checkbox {
+  margin: 0;
+  width: 18px;
+  height: 18px;
+  accent-color: #3b82f6;
+}
+
+.feed-option-text {
+  min-width: 0;
+}
+
+.feed-option-label {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 4px;
+  cursor: pointer;
+}
+
+.feed-option-link {
+  display: inline-block;
+  color: #8bc1ff;
+  text-decoration: underline;
+  word-break: break-all;
+}
+
+.feed-option-link:hover {
+  color: #b7dbff;
+}
+/*# sourceMappingURL=styles.css.map */

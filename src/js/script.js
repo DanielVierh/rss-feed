@@ -527,19 +527,29 @@ function renderFeedSelectionList() {
       .slice()
       .sort((a, b) => a.meta.label.localeCompare(b.meta.label))
       .forEach(({ key, meta }) => {
-        const row = document.createElement("label");
+        const row = document.createElement("div");
         row.className = "feed-option";
 
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
         checkbox.value = key;
         checkbox.checked = selected.has(key);
+        checkbox.id = `feed_select_${key}`;
+        checkbox.className = "feed-option-checkbox";
 
         const text = document.createElement("div");
-        const label = document.createElement("strong");
+        text.className = "feed-option-text";
+        const label = document.createElement("label");
+        label.className = "feed-option-label";
+        label.htmlFor = checkbox.id;
         label.textContent = meta.label;
-        const url = document.createElement("small");
+        const url = document.createElement("a");
+        url.className = "feed-option-link";
+        url.href = meta.rssUrl;
+        url.target = "_blank";
+        url.rel = "noopener noreferrer";
         url.textContent = meta.rssUrl;
+        url.addEventListener("click", (e) => e.stopPropagation());
 
         text.appendChild(label);
         text.appendChild(url);
