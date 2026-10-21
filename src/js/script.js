@@ -188,6 +188,10 @@ const FEED_CATALOG = {
 const DEFAULT_IMAGE_URL = "https://via.placeholder.com/600x360?text=No+Image";
 const DEFAULT_PREVIEW_TEXT = "Keine Vorschau verfügbar.";
 const MAX_ITEMS_PER_FEED = 30;
+const PUBLIC_FEED_PROXIES = [
+  (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+];
 
 const ui = {
   refreshBtn: document.getElementById("btn_refresh"),
@@ -330,13 +334,7 @@ function fetchAllFeeds() {
 
 async function fetchFeed(key, cfg) {
   try {
-    const res = await fetch(cfg.url);
-    if (!res.ok) {
-      const error = await res.json();
-      throw new Error(error.message || `Feed-Proxy antwortete mit HTTP ${res.status}.`);
-    }
-
-    const xml = await res.text();
+    const { xml } = await fetchFeedXml(cfg.rssUrl);
     const items = parseFeedXml(xml);
     state.itemsByFeed.set(key, items);
     renderFeed(key, cfg, items);
@@ -427,7 +425,7 @@ function buildActiveFeedConfigs() {
       key,
       label: meta.label,
       headerClass: meta.headerClass || "",
-      url: buildFeedProxyUrl(meta.rssUrl),
+      rssUrl: meta.rssUrl,
       container: null,
       getImage: (item) => getImageForItem(meta.imageMode, item),
     };
@@ -632,8 +630,86 @@ function clearCustomFeedError() {
   if (ui.customFeedError) ui.customFeedError.textContent = "";
 }
 
-function buildFeedProxyUrl(rssUrl) {
-  return `/api/rss?url=${encodeURIComponent(rssUrl)}`;
+function isLocalDevHost() {
+  return ["localhost", "127.0.0.1"].includes(window.location.hostname);
+}
+
+function buildFeedProxyCandidates(rssUrl) {
+  const candidates = [];
+  if (isLocalDevHost()) {
+    candidates.push(`/api/rss?url=${encodeURIComponent(rssUrl)}`);
+  }
+  PUBLIC_FEED_PROXIES.forEach((builder) => candidates.push(builder(rssUrl)));
+  return candidates;
+}
+
+async function readErrorMessage(response, fallbackMessage) {
+  const contentType = response.headers.get("content-type") || "";
+
+  try {
+    if (contentType.includes("application/json")) {
+      const parsed = await response.json();
+      return parsed?.message || fallbackMessage;
+    }
+
+    const text = (await response.text()).trim();
+    if (text) return text.slice(0, 180);
+  } catch {
+    // ignore parsing errors and use fallback below
+  }
+
+  return fallbackMessage;
+}
+
+async function fetchFeedXml(rssUrl) {
+  const urls = buildFeedProxyCandidates(rssUrl);
+  const errors = [];
+
+  for (const url of urls) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) {
+        const message = await readErrorMessage(
+          res,
+          `Feed-Proxy antwortete mit HTTP ${res.status}.`,
+        );
+        errors.push(`${url} → ${message}`);
+        continue;
+      }
+
+      const xml = await res.text();
+      return { xml, sourceUrl: url };
+    } catch (error) {
+      errors.push(`${url} → ${error?.message || String(error)}`);
+    }
+  }
+
+  throw new Error(errors.join(" | "));
+}
+
+function extractFirstMetaImageFromHtml(html, articleUrl) {
+  try {
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    const selectors = [
+      'meta[property="og:image:secure_url"]',
+      'meta[property="og:image"]',
+      'meta[name="twitter:image:src"]',
+      'meta[name="twitter:image"]',
+      'link[rel="image_src"]',
+    ];
+
+    for (const selector of selectors) {
+      const node = doc.querySelector(selector);
+      if (!node) continue;
+      const value = node.getAttribute("content") || node.getAttribute("href");
+      const normalized = normalizeImageUrl(value || "", articleUrl);
+      if (normalized) return normalized;
+    }
+  } catch {
+    return "";
+  }
+
+  return "";
 }
 
 function getImageForItem(mode, item) {
@@ -725,17 +801,42 @@ async function resolveArticleImage(articleUrl) {
 
   const request = (async () => {
     try {
-      const res = await fetch(`/api/page-meta?url=${encodeURIComponent(articleUrl)}`);
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(
-          error.message || `Meta-Proxy antwortete mit HTTP ${res.status}.`,
-        );
+      const candidates = isLocalDevHost()
+        ? [
+            `/api/page-meta?url=${encodeURIComponent(articleUrl)}`,
+            ...PUBLIC_FEED_PROXIES.map((builder) => builder(articleUrl)),
+          ]
+        : PUBLIC_FEED_PROXIES.map((builder) => builder(articleUrl));
+
+      for (const url of candidates) {
+        const res = await fetch(url);
+        if (!res.ok) continue;
+
+        const contentType = res.headers.get("content-type") || "";
+        if (contentType.includes("application/json")) {
+          const data = await res.json();
+          const fromJson = normalizeImageUrl(data?.image || "", articleUrl);
+          if (fromJson) {
+            state.articleImageCache.set(articleUrl, fromJson);
+            return fromJson;
+          }
+          if (url.startsWith("/api/page-meta")) {
+            state.articleImageCache.set(articleUrl, "");
+            return "";
+          }
+          continue;
+        }
+
+        const html = await res.text();
+        const fromHtml = extractFirstMetaImageFromHtml(html, articleUrl);
+        if (fromHtml) {
+          state.articleImageCache.set(articleUrl, fromHtml);
+          return fromHtml;
+        }
       }
-      const data = await res.json();
-      const img = normalizeImageUrl(data?.image || "", articleUrl);
-      state.articleImageCache.set(articleUrl, img || "");
-      return img || "";
+
+      state.articleImageCache.set(articleUrl, "");
+      return "";
     } catch (error) {
       console.warn(`Konnte Artikelbild nicht laden:`, error);
       state.articleImageCache.set(articleUrl, "");
