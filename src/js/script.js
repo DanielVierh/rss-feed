@@ -188,10 +188,9 @@ const FEED_CATALOG = {
 const DEFAULT_IMAGE_URL = "https://via.placeholder.com/600x360?text=No+Image";
 const DEFAULT_PREVIEW_TEXT = "Keine Vorschau verfügbar.";
 const MAX_ITEMS_PER_FEED = 30;
-const PUBLIC_FEED_PROXIES = [
-  (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-  (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-];
+const RSS_WORKER_BASE_URL = String(
+  window.RSS_WORKER_BASE_URL || "",
+).trim().replace(/\/+$/, "");
 
 const ui = {
   refreshBtn: document.getElementById("btn_refresh"),
@@ -332,6 +331,15 @@ function fetchAllFeeds() {
   );
 }
 
+function isGithubPagesHost() {
+  return window.location.hostname.endsWith("github.io");
+}
+
+function buildWorkerApiUrl(path, targetUrl) {
+  if (!RSS_WORKER_BASE_URL) return "";
+  return `${RSS_WORKER_BASE_URL}${path}?url=${encodeURIComponent(targetUrl)}`;
+}
+
 async function fetchFeed(key, cfg) {
   try {
     const { xml } = await fetchFeedXml(cfg.rssUrl);
@@ -340,8 +348,12 @@ async function fetchFeed(key, cfg) {
     renderFeed(key, cfg, items);
   } catch (error) {
     console.error(`Fehler beim Laden von ${cfg.label}:`, error);
-    if (cfg.container)
-      cfg.container.innerHTML = `<h1>Fehler beim Laden der Daten</h1>`;
+    if (cfg.container) {
+      const message = error instanceof Error ? error.message : "Unbekannter Fehler.";
+      cfg.container.innerHTML = `<h1>Fehler beim Laden der Daten</h1><p class="feed-error-message">${escapeHtml(
+        message,
+      )}</p>`;
+    }
   }
 }
 
@@ -639,7 +651,8 @@ function buildFeedProxyCandidates(rssUrl) {
   if (isLocalDevHost()) {
     candidates.push(`/api/rss?url=${encodeURIComponent(rssUrl)}`);
   }
-  PUBLIC_FEED_PROXIES.forEach((builder) => candidates.push(builder(rssUrl)));
+  const workerUrl = buildWorkerApiUrl("/rss", rssUrl);
+  if (workerUrl) candidates.push(workerUrl);
   return candidates;
 }
 
@@ -663,6 +676,14 @@ async function readErrorMessage(response, fallbackMessage) {
 
 async function fetchFeedXml(rssUrl) {
   const urls = buildFeedProxyCandidates(rssUrl);
+  if (urls.length === 0) {
+    throw new Error(
+      isGithubPagesHost()
+        ? "Kein RSS-Proxy konfiguriert. Setze window.RSS_WORKER_BASE_URL in index.html auf deine Worker-URL."
+        : "Kein RSS-Proxy verfügbar.",
+    );
+  }
+
   const errors = [];
 
   for (const url of urls) {
@@ -801,12 +822,13 @@ async function resolveArticleImage(articleUrl) {
 
   const request = (async () => {
     try {
-      const candidates = isLocalDevHost()
-        ? [
-            `/api/page-meta?url=${encodeURIComponent(articleUrl)}`,
-            ...PUBLIC_FEED_PROXIES.map((builder) => builder(articleUrl)),
-          ]
-        : PUBLIC_FEED_PROXIES.map((builder) => builder(articleUrl));
+      const candidates = [];
+      if (isLocalDevHost()) {
+        candidates.push(`/api/page-meta?url=${encodeURIComponent(articleUrl)}`);
+      }
+      const workerUrl = buildWorkerApiUrl("/page-meta", articleUrl);
+      if (workerUrl) candidates.push(workerUrl);
+      if (candidates.length === 0) return "";
 
       for (const url of candidates) {
         const res = await fetch(url);
@@ -820,7 +842,7 @@ async function resolveArticleImage(articleUrl) {
             state.articleImageCache.set(articleUrl, fromJson);
             return fromJson;
           }
-          if (url.startsWith("/api/page-meta")) {
+          if (url.includes("/page-meta")) {
             state.articleImageCache.set(articleUrl, "");
             return "";
           }
@@ -848,6 +870,15 @@ async function resolveArticleImage(articleUrl) {
 
   state.articleImageRequests.set(articleUrl, request);
   return request;
+}
+
+function escapeHtml(text) {
+  return String(text || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 function renderFeed(feedKey, cfg, items) {
