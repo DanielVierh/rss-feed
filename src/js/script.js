@@ -1,12 +1,6 @@
+// Nur Feeds, die CORS erlauben und daher direkt aus dem Browser lesbar sind.
 const FEED_CATALOG = {
   // Nachrichten (DE)
-  heise: {
-    category: "Nachrichten (DE)",
-    label: "Heise",
-    rssUrl: "https://heise.de/rss/heise-atom.xml",
-    headerClass: "",
-    imageMode: "content_img",
-  },
   tagesschau: {
     category: "Nachrichten (DE)",
     label: "Tagesschau",
@@ -14,50 +8,8 @@ const FEED_CATALOG = {
     headerClass: "tagesschau",
     imageMode: "content_img",
   },
-  spiegel: {
-    category: "Nachrichten (DE)",
-    label: "Spiegel News",
-    rssUrl: "https://www.spiegel.de/schlagzeilen/tops/index.rss",
-    headerClass: "spiegel",
-    imageMode: "enclosure",
-  },
-  zeit: {
-    category: "Nachrichten (DE)",
-    label: "DIE ZEIT",
-    rssUrl: "https://newsfeed.zeit.de/index",
-    headerClass: "",
-    imageMode: "content_img",
-  },
-  faz: {
-    category: "Nachrichten (DE)",
-    label: "FAZ",
-    rssUrl: "https://www.faz.net/rss/aktuell/",
-    headerClass: "",
-    imageMode: "content_img",
-  },
-  sueddeutsche: {
-    category: "Nachrichten (DE)",
-    label: "Süddeutsche Zeitung",
-    rssUrl: "https://rss.sueddeutsche.de/rss/Topthemen",
-    headerClass: "",
-    imageMode: "content_img",
-  },
 
   // Technik & Gadgets
-  golem: {
-    category: "Technik & Gadgets",
-    label: "Golem.de",
-    rssUrl: "https://rss.golem.de/rss.php?feed=RSS2.0",
-    headerClass: "",
-    imageMode: "content_img",
-  },
-  theverge: {
-    category: "Technik & Gadgets",
-    label: "The Verge",
-    rssUrl: "https://www.theverge.com/rss/index.xml",
-    headerClass: "",
-    imageMode: "content_img",
-  },
   wired: {
     category: "Technik & Gadgets",
     label: "WIRED",
@@ -65,43 +17,8 @@ const FEED_CATALOG = {
     headerClass: "",
     imageMode: "content_img",
   },
-  arstechnica: {
-    category: "Technik & Gadgets",
-    label: "Ars Technica",
-    rssUrl: "https://feeds.arstechnica.com/arstechnica/index",
-    headerClass: "",
-    imageMode: "content_img",
-  },
-  engadget: {
-    category: "Technik & Gadgets",
-    label: "Engadget",
-    rssUrl: "https://www.engadget.com/rss.xml",
-    headerClass: "",
-    imageMode: "content_img",
-  },
-  techcrunch: {
-    category: "Technik & Gadgets",
-    label: "TechCrunch",
-    rssUrl: "https://techcrunch.com/feed/",
-    headerClass: "",
-    imageMode: "content_img",
-  },
 
   // Programmieren
-  hackernews: {
-    category: "Programmieren",
-    label: "Hacker News",
-    rssUrl: "https://news.ycombinator.com/rss",
-    headerClass: "",
-    imageMode: "content_img",
-  },
-  lobsters: {
-    category: "Programmieren",
-    label: "Lobsters",
-    rssUrl: "https://lobste.rs/rss",
-    headerClass: "",
-    imageMode: "content_img",
-  },
   devto: {
     category: "Programmieren",
     label: "DEV Community",
@@ -116,81 +33,11 @@ const FEED_CATALOG = {
     headerClass: "",
     imageMode: "content_img",
   },
-  stackoverflowblog: {
-    category: "Programmieren",
-    label: "Stack Overflow Blog",
-    rssUrl: "https://stackoverflow.blog/feed/",
-    headerClass: "",
-    imageMode: "content_img",
-  },
-  smashing: {
-    category: "Programmieren",
-    label: "Smashing Magazine",
-    rssUrl: "https://www.smashingmagazine.com/feed/",
-    headerClass: "",
-    imageMode: "content_img",
-  },
-  csstricks: {
-    category: "Programmieren",
-    label: "CSS-Tricks",
-    rssUrl: "https://css-tricks.com/feed/",
-    headerClass: "",
-    imageMode: "content_img",
-  },
-
-  // Python
-  planetpython: {
-    category: "Python",
-    label: "Planet Python",
-    rssUrl: "https://planetpython.org/rss20.xml",
-    headerClass: "",
-    imageMode: "content_img",
-  },
-  pythoninsider: {
-    category: "Python",
-    label: "Python Insider",
-    rssUrl: "https://feeds.feedburner.com/PythonInsider",
-    headerClass: "",
-    imageMode: "content_img",
-  },
-
-  // Fotografie
-  petapixel: {
-    category: "Fotografie",
-    label: "PetaPixel",
-    rssUrl: "https://petapixel.com/feed/",
-    headerClass: "",
-    imageMode: "content_img",
-  },
-  fstoppers: {
-    category: "Fotografie",
-    label: "Fstoppers",
-    rssUrl: "https://fstoppers.com/feed",
-    headerClass: "",
-    imageMode: "content_img",
-  },
-  dps: {
-    category: "Fotografie",
-    label: "Digital Photography School",
-    rssUrl: "https://digital-photography-school.com/feed/",
-    headerClass: "",
-    imageMode: "content_img",
-  },
-  phoblographer: {
-    category: "Fotografie",
-    label: "The Phoblographer",
-    rssUrl: "https://www.thephoblographer.com/feed/",
-    headerClass: "",
-    imageMode: "content_img",
-  },
 };
 
 const DEFAULT_IMAGE_URL = "https://via.placeholder.com/600x360?text=No+Image";
 const DEFAULT_PREVIEW_TEXT = "Keine Vorschau verfügbar.";
 const MAX_ITEMS_PER_FEED = 30;
-const RSS_WORKER_BASE_URL = String(
-  window.RSS_WORKER_BASE_URL || "",
-).trim().replace(/\/+$/, "");
 
 const ui = {
   refreshBtn: document.getElementById("btn_refresh"),
@@ -222,8 +69,6 @@ const STORAGE_KEYS = {
 const state = {
   sortOrder: "newest",
   itemsByFeed: new Map(),
-  articleImageCache: new Map(),
-  articleImageRequests: new Map(),
   favorites: {},
   readLater: {},
   selectedFeedKeys: [],
@@ -331,18 +176,9 @@ function fetchAllFeeds() {
   );
 }
 
-function isGithubPagesHost() {
-  return window.location.hostname.endsWith("github.io");
-}
-
-function buildWorkerApiUrl(path, targetUrl) {
-  if (!RSS_WORKER_BASE_URL) return "";
-  return `${RSS_WORKER_BASE_URL}${path}?url=${encodeURIComponent(targetUrl)}`;
-}
-
 async function fetchFeed(key, cfg) {
   try {
-    const { xml } = await fetchFeedXml(cfg.rssUrl);
+    const xml = await fetchFeedXml(cfg.rssUrl);
     const items = parseFeedXml(xml);
     state.itemsByFeed.set(key, items);
     renderFeed(key, cfg, items);
@@ -360,7 +196,7 @@ async function fetchFeed(key, cfg) {
 function parseFeedXml(xml) {
   const doc = new DOMParser().parseFromString(xml, "application/xml");
   if (doc.querySelector("parsererror")) {
-    throw new Error("Der Feed-Proxy hat kein gültiges RSS-/Atom-XML geliefert.");
+    throw new Error("Der Feed enthält kein gültiges RSS-/Atom-XML.");
   }
 
   const normalizeTagName = (element) =>
@@ -642,95 +478,21 @@ function clearCustomFeedError() {
   if (ui.customFeedError) ui.customFeedError.textContent = "";
 }
 
-function isLocalDevHost() {
-  return ["localhost", "127.0.0.1"].includes(window.location.hostname);
-}
-
-function buildFeedProxyCandidates(rssUrl) {
-  const candidates = [];
-  if (isLocalDevHost()) {
-    candidates.push(`/api/rss?url=${encodeURIComponent(rssUrl)}`);
-  }
-  const workerUrl = buildWorkerApiUrl("/rss", rssUrl);
-  if (workerUrl) candidates.push(workerUrl);
-  return candidates;
-}
-
-async function readErrorMessage(response, fallbackMessage) {
-  const contentType = response.headers.get("content-type") || "";
-
-  try {
-    if (contentType.includes("application/json")) {
-      const parsed = await response.json();
-      return parsed?.message || fallbackMessage;
-    }
-
-    const text = (await response.text()).trim();
-    if (text) return text.slice(0, 180);
-  } catch {
-    // ignore parsing errors and use fallback below
-  }
-
-  return fallbackMessage;
-}
-
 async function fetchFeedXml(rssUrl) {
-  const urls = buildFeedProxyCandidates(rssUrl);
-  if (urls.length === 0) {
+  let res;
+  try {
+    res = await fetch(rssUrl);
+  } catch {
     throw new Error(
-      isGithubPagesHost()
-        ? "Kein RSS-Proxy konfiguriert. Setze window.RSS_WORKER_BASE_URL in index.html auf deine Worker-URL."
-        : "Kein RSS-Proxy verfügbar.",
+      "Feed konnte nicht geladen werden. Der Server erlaubt möglicherweise keine Browser-Zugriffe (CORS).",
     );
   }
 
-  const errors = [];
-
-  for (const url of urls) {
-    try {
-      const res = await fetch(url);
-      if (!res.ok) {
-        const message = await readErrorMessage(
-          res,
-          `Feed-Proxy antwortete mit HTTP ${res.status}.`,
-        );
-        errors.push(`${url} → ${message}`);
-        continue;
-      }
-
-      const xml = await res.text();
-      return { xml, sourceUrl: url };
-    } catch (error) {
-      errors.push(`${url} → ${error?.message || String(error)}`);
-    }
+  if (!res.ok) {
+    throw new Error(`Feed antwortete mit HTTP ${res.status}.`);
   }
 
-  throw new Error(errors.join(" | "));
-}
-
-function extractFirstMetaImageFromHtml(html, articleUrl) {
-  try {
-    const doc = new DOMParser().parseFromString(html, "text/html");
-    const selectors = [
-      'meta[property="og:image:secure_url"]',
-      'meta[property="og:image"]',
-      'meta[name="twitter:image:src"]',
-      'meta[name="twitter:image"]',
-      'link[rel="image_src"]',
-    ];
-
-    for (const selector of selectors) {
-      const node = doc.querySelector(selector);
-      if (!node) continue;
-      const value = node.getAttribute("content") || node.getAttribute("href");
-      const normalized = normalizeImageUrl(value || "", articleUrl);
-      if (normalized) return normalized;
-    }
-  } catch {
-    return "";
-  }
-
-  return "";
+  return res.text();
 }
 
 function getImageForItem(mode, item) {
@@ -806,72 +568,6 @@ function normalizeImageUrl(url, baseUrl) {
   }
 }
 
-function isPlaceholderImage(url) {
-  return String(url || "").startsWith("data:image/svg+xml");
-}
-
-async function resolveArticleImage(articleUrl) {
-  if (!articleUrl) return "";
-
-  if (state.articleImageCache.has(articleUrl)) {
-    return state.articleImageCache.get(articleUrl) || "";
-  }
-  if (state.articleImageRequests.has(articleUrl)) {
-    return state.articleImageRequests.get(articleUrl);
-  }
-
-  const request = (async () => {
-    try {
-      const candidates = [];
-      if (isLocalDevHost()) {
-        candidates.push(`/api/page-meta?url=${encodeURIComponent(articleUrl)}`);
-      }
-      const workerUrl = buildWorkerApiUrl("/page-meta", articleUrl);
-      if (workerUrl) candidates.push(workerUrl);
-      if (candidates.length === 0) return "";
-
-      for (const url of candidates) {
-        const res = await fetch(url);
-        if (!res.ok) continue;
-
-        const contentType = res.headers.get("content-type") || "";
-        if (contentType.includes("application/json")) {
-          const data = await res.json();
-          const fromJson = normalizeImageUrl(data?.image || "", articleUrl);
-          if (fromJson) {
-            state.articleImageCache.set(articleUrl, fromJson);
-            return fromJson;
-          }
-          if (url.includes("/page-meta")) {
-            state.articleImageCache.set(articleUrl, "");
-            return "";
-          }
-          continue;
-        }
-
-        const html = await res.text();
-        const fromHtml = extractFirstMetaImageFromHtml(html, articleUrl);
-        if (fromHtml) {
-          state.articleImageCache.set(articleUrl, fromHtml);
-          return fromHtml;
-        }
-      }
-
-      state.articleImageCache.set(articleUrl, "");
-      return "";
-    } catch (error) {
-      console.warn(`Konnte Artikelbild nicht laden:`, error);
-      state.articleImageCache.set(articleUrl, "");
-      return "";
-    } finally {
-      state.articleImageRequests.delete(articleUrl);
-    }
-  })();
-
-  state.articleImageRequests.set(articleUrl, request);
-  return request;
-}
-
 function escapeHtml(text) {
   return String(text || "")
     .replace(/&/g, "&amp;")
@@ -930,22 +626,6 @@ function createItemCard(summary, { showActions }) {
       itemImage.src = placeholder || DEFAULT_IMAGE_URL;
     };
     itemDiv.appendChild(itemImage);
-
-    if (
-      normalizedLink &&
-      isPlaceholderImage(summary.image) &&
-      !state.articleImageCache.has(normalizedLink)
-    ) {
-      resolveArticleImage(normalizedLink).then((imageUrl) => {
-        if (!imageUrl) return;
-        if (!itemImage.isConnected) return;
-        if (!isPlaceholderImage(itemImage.src)) return;
-        itemImage.src = imageUrl;
-      });
-    } else if (normalizedLink) {
-      const cached = state.articleImageCache.get(normalizedLink) || "";
-      if (cached && isPlaceholderImage(itemImage.src)) itemImage.src = cached;
-    }
   }
 
   const itemTitle = document.createElement("h3");
@@ -1283,7 +963,7 @@ function loadStateFromStorage() {
 }
 
 function getDefaultSelectedFeedKeys() {
-  return ["heise", "tagesschau", "spiegel"];
+  return ["tagesschau", "wired", "devto", "githubblog"];
 }
 
 function saveLists() {
