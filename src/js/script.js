@@ -9,6 +9,15 @@ const FEED_CATALOG = {
     imageMode: "content_img",
   },
 
+  heise: {
+    category: "Nachrichten (DE)",
+    label: "heise online",
+    // Finale URL ohne Weiterleitung, da die Weiterleitung von heise.rdf keine CORS-Header liefert.
+    rssUrl: "https://www.heise.de/rss/heise.rdf",
+    headerClass: "",
+    imageMode: "content_img",
+  },
+
   // Technik & Gadgets
   wired: {
     category: "Technik & Gadgets",
@@ -963,7 +972,7 @@ function loadStateFromStorage() {
 }
 
 function getDefaultSelectedFeedKeys() {
-  return ["tagesschau", "wired", "devto", "githubblog"];
+  return ["heise", "tagesschau", "wired", "devto", "githubblog"];
 }
 
 function saveLists() {
